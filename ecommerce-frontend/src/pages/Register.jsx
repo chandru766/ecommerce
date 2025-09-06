@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { registerUser } from "../services/api";
 import { useNavigate } from "react-router-dom";
+// ✅ Import your logo
+import logo from "../assets/logo.jpg"; // adjust path if needed
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -22,15 +24,22 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      // Call backend to register user
       await registerUser(form);
-
       setMessage("✅ Registration successful! Redirecting to login...");
-
-      // Redirect to login page after short delay
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setMessage(err.response?.data || "❌ Registration failed. Please try again.");
+      let errorMsg = "❌ Registration failed. Please try again.";
+      if (err.response) {
+        const serverError =
+          err.response.data?.error || err.response.data?.message;
+
+        if (serverError && serverError.toLowerCase().includes("username")) {
+          errorMsg = "❌ Username already exists. Please choose another.";
+        } else if (serverError) {
+          errorMsg = `❌ ${serverError}`;
+        }
+      }
+      setMessage(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +96,15 @@ const Register = () => {
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h2 style={{ marginBottom: "30px", color: "#16a34a" }}>Create Account</h2>
+        {/* ✅ Logo at top */}
+        <img
+          src={logo}
+          alt="E-commerce Logo"
+          style={{ width: "95px", marginBottom: "5px" }}
+        />
+        <h2 style={{ marginBottom: "30px", color: "#16a34a" }}>
+          Create Account
+        </h2>
         <form onSubmit={handleSubmit}>
           <input
             name="name"
@@ -124,10 +141,12 @@ const Register = () => {
             required
           />
           <button type="submit" style={buttonStyle} disabled={isLoading}>
-            {isLoading ? "Processing..." : "Register"}
+            {isLoading ? "Processing..." : "Sign Up"}
           </button>
         </form>
-        {message && <p style={messageStyle(message.includes("✅"))}>{message}</p>}
+        {message && (
+          <p style={messageStyle(message.includes("✅"))}>{message}</p>
+        )}
         <p style={{ marginTop: "20px" }}>
           Already have an account?{" "}
           <span
